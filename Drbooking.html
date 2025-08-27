@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ระบบจองคิวพบหมอ</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #f9f9f9;
+    }
+    h2 {
+      color: #2c3e50;
+    }
+    form, table {
+      background: #fff;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    label, input, button {
+      display: block;
+      margin: 8px 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+    }
+    th {
+      background: #3498db;
+      color: #fff;
+    }
+    .error {
+      color: red;
+    }
+    .success {
+      color: green;
+    }
+    .delete-btn {
+      background: #e74c3c;
+      color: #fff;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .delete-btn:hover {
+      background: #c0392b;
+    }
+    .clear-btn {
+      background: #f39c12;
+      color: #fff;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .clear-btn:hover {
+      background: #e67e22;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>ระบบจองคิวพบหมอ</h2>
+  <form id="bookingForm">
+    <label>ชื่อผู้จอง:</label>
+    <input type="text" id="name" required>
+
+    <label>วันที่ต้องการจอง:</label>
+    <input type="date" id="date" required>
+
+    <button type="submit">จองคิว</button>
+    <p id="message"></p>
+  </form>
+
+  <h2>รายการจองทั้งหมด</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>วันที่</th>
+        <th>ชื่อผู้จอง</th>
+        <th>การจัดการ</th>
+      </tr>
+    </thead>
+    <tbody id="bookingList"></tbody>
+  </table>
+
+  <button class="clear-btn" onclick="clearAll()">ล้างข้อมูลทั้งหมด</button>
+
+<script>
+  // โหลดข้อมูลเก่า
+  let bookings = JSON.parse(localStorage.getItem("bookings")) || [];
+
+  function renderBookings() {
+    const list = document.getElementById("bookingList");
+    list.innerHTML = "";
+    bookings.forEach((b, index) => {
+      let row = `<tr>
+                  <td>${b.date}</td>
+                  <td>${b.name}</td>
+                  <td><button class="delete-btn" onclick="deleteBooking(${index})">ลบ</button></td>
+                </tr>`;
+      list.innerHTML += row;
+    });
+  }
+
+  function deleteBooking(index) {
+    if(confirm("คุณแน่ใจว่าต้องการลบการจองนี้?")){
+      bookings.splice(index, 1);
+      localStorage.setItem("bookings", JSON.stringify(bookings));
+      renderBookings();
+    }
+  }
+
+  function clearAll() {
+    if(confirm("คุณแน่ใจว่าต้องการล้างข้อมูลทั้งหมด?")){
+      bookings = [];
+      localStorage.removeItem("bookings");
+      renderBookings();
+    }
+  }
+
+  document.getElementById("bookingForm").addEventListener("submit", function(e){
+    e.preventDefault();
+
+    const name = document.getElementById("name").value.trim();
+    const date = document.getElementById("date").value;
+    const message = document.getElementById("message");
+
+    // ตรวจสอบว่าซ้ำหรือยัง
+    const exists = bookings.find(b => b.date === date);
+    if (exists) {
+      message.textContent = "วันดังกล่าวมีการจองแล้ว กรุณาเลือกวันอื่น";
+      message.className = "error";
+      return;
+    }
+
+    // บันทึกข้อมูลใหม่
+    bookings.push({name, date});
+    localStorage.setItem("bookings", JSON.stringify(bookings));
+
+    message.textContent = "จองคิวสำเร็จ!";
+    message.className = "success";
+
+    renderBookings();
+    this.reset();
+  });
+
+  renderBookings();
+</script>
+
+</body>
+</html>
